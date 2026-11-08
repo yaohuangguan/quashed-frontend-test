@@ -47,3 +47,16 @@ and follow its steps in order. If nothing matches, use `implement-change`.
 10. **Finish with evidence.** Name what you ran, what happened, and what you did
     not check.
 <!-- agent-playbook:end -->
+
+## This project
+
+- Commands: `npm install`, `npm run typecheck`, `npm test` (API integration
+  tests on a throwaway local Postgres, then web unit tests), `npm run test:e2e`
+  (Playwright against `scripts/local-api.ts`, never production).
+- Layout and decisions: `README.md` and `docs/ARCHITECTURE.md`.
+- Validation rules live once, in `supabase/functions/_shared/`; the API and the
+  web app both import them.
+- Only `supabase/functions/api/index.ts` may use Deno APIs. Keep the rest
+  runtime-neutral so the Node tests run the real code.
+- Schema changes are new files in `supabase/migrations/`; never edit one that
+  has been applied.

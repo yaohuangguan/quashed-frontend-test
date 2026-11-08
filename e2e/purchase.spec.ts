@@ -70,9 +70,17 @@ test("buys Cloudid end to end and sends feedback", async ({ page }) => {
   await expect(pay).toBeDisabled();
   await fillCard(page);
 
+  await expect(flyout.getByRole("note")).toContainText("Demo payment");
+
   const orderResponse = page.waitForResponse((r) => r.url().endsWith("/api/orders"));
   await pay.click();
-  expect((await orderResponse).status()).toBe(201);
+  const response = await orderResponse;
+  expect(response.status()).toBe(201);
+  // Only the last four digits leave the browser; never the full number or CVV.
+  const sent = response.request().postDataJSON() as { payment: Record<string, unknown> };
+  expect(sent.payment).toEqual({ cardLast4: "1121", expiryMonth: 12, expiryYear: Number(nextYear), cardHolder: "Steven Baker" });
+  expect(response.request().postData()).not.toContain("12345678");
+  expect(response.request().postData()).not.toContain("334");
   await expect(flyout.getByText(`Your contract starts from ${date.shown}`)).toBeVisible();
   await expect(flyout.getByText("Cloudid specialists will contact you with further steps.")).toBeVisible();
 

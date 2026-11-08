@@ -43,6 +43,16 @@
   max-width: 640px;
   margin: 0;
 }
+.flyout__demo {
+  align-self: flex-start;
+  margin: 0;
+  padding: var(--space-xs) var(--space-ms);
+  border: 1px solid var(--blue-0);
+  border-radius: 16px;
+  background: var(--mono-secondary);
+  color: var(--blue-0);
+  font-size: var(--text-s);
+}
 .flyout__error {
   margin: 0;
   padding: var(--space-s) var(--space-ms);

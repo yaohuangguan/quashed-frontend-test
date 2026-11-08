@@ -6,8 +6,6 @@ const KEY = "sb_publishable_test_key";
 // 2026-03-10 11:30 UTC is already 2026-03-11 in Auckland (UTC+13).
 const NOW = new Date("2026-03-10T11:30:00Z");
 const TODAY_NZ = "2026-03-11";
-const CARD_NUMBER = "4111 2222 3333 1121";
-const CVV = "987";
 
 const sql = postgres(inject("databaseUrl"), { max: 4, onnotice: () => {} });
 const loggedErrors: unknown[] = [];
@@ -59,7 +57,7 @@ const pronteDetails = {
   contractStartDate: "2026-04-10",
   needsRouter: true,
 };
-const payment = { cardNumber: CARD_NUMBER, expiryMonth: 12, expiryYear: 2026, cardHolder: "Steven Baker", cvv: CVV };
+const payment = { cardLast4: "1121", expiryMonth: 12, expiryYear: 2026, cardHolder: "Steven Baker" };
 
 async function countRows(table: "connections" | "orders" | "feedback") {
   const [row] = await sql<{ n: number }[]>`select count(*)::int as n from ${sql("public." + table)}`;
@@ -216,7 +214,7 @@ describe("connections", () => {
 });
 
 describe("POST /orders", () => {
-  it("stores the order with only the last four card digits", async () => {
+  it("stores the order with the last four card digits", async () => {
     const connectionId = await connect("cloudid");
     const res = await call("POST", "/orders", { connectionId, details: cloudidDetails, payment });
     expect(res.status).toBe(201);
@@ -241,9 +239,19 @@ describe("POST /orders", () => {
       card_expiry_month: 12,
       card_expiry_year: 2026,
     });
-    const stored = JSON.stringify(row);
-    expect(stored).not.toContain("411122223333");
-    expect(stored).not.toContain(CVV);
+    expect(row!.request_hash).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it.each([
+    ["a full card number", { ...payment, cardNumber: "4111222233331121" }, "payment"],
+    ["a CVV", { ...payment, cvv: "987" }, "payment"],
+  ])("refuses a payment carrying %s, so it never reaches the server's storage", async (_label, body, path) => {
+    const connectionId = await connect("cloudid");
+    const res = await call("POST", "/orders", { connectionId, details: cloudidDetails, payment: body });
+    expect(res.status).toBe(400);
+    const { error } = (await res.json()) as { error: { fields: { path: string }[] } };
+    expect(error.fields.map((f) => f.path)).toContain(path);
+    expect(await countRows("orders")).toBe(0);
   });
 
   it("stores Pronete's router answer", async () => {
@@ -281,8 +289,8 @@ describe("POST /orders", () => {
   it.each([
     ["last month", { expiryMonth: 2, expiryYear: 2026 }, 400],
     ["this month", { expiryMonth: 3, expiryYear: 2026 }, 201],
-    ["a short card number", { cardNumber: "1234 5678 9012" }, 400],
-    ["a two-digit CVV", { cvv: "12" }, 400],
+    ["three last digits", { cardLast4: "121" }, 400],
+    ["letters as last digits", { cardLast4: "11a1" }, 400],
   ])("card with %s returns %i", async (_label, change, status) => {
     const connectionId = await connect("cloudid");
     const res = await call("POST", "/orders", { connectionId, details: cloudidDetails, payment: { ...payment, ...change } });
@@ -290,20 +298,45 @@ describe("POST /orders", () => {
     expect(await countRows("orders")).toBe(status === 201 ? 1 : 0);
   });
 
-  it("refuses a second order on the same connection", async () => {
+  it("answers a repeated identical request with the existing order", async () => {
+    const connectionId = await connect("cloudid");
+    const body = { connectionId, details: cloudidDetails, payment };
+    const first = await call("POST", "/orders", body);
+    expect(first.status).toBe(201);
+    const retry = await call("POST", "/orders", body);
+    expect(retry.status).toBe(200);
+    expect(await retry.json()).toEqual(await first.json());
+    expect(await countRows("orders")).toBe(1);
+  });
+
+  it("still answers the retry after the user disconnected", async () => {
+    const connectionId = await connect("cloudid");
+    const body = { connectionId, details: cloudidDetails, payment };
+    const { orderId } = (await (await call("POST", "/orders", body)).json()) as { orderId: string };
+    await call("DELETE", `/connections/${connectionId}`);
+    const retry = await call("POST", "/orders", body);
+    expect(retry.status).toBe(200);
+    expect(((await retry.json()) as { orderId: string }).orderId).toBe(orderId);
+  });
+
+  it("refuses a different request on a connection that already has an order", async () => {
     const connectionId = await connect("cloudid");
     expect((await call("POST", "/orders", { connectionId, details: cloudidDetails, payment })).status).toBe(201);
-    const res = await call("POST", "/orders", { connectionId, details: cloudidDetails, payment });
+    const changed = { ...cloudidDetails, dataPlan: "10 Gb" };
+    const res = await call("POST", "/orders", { connectionId, details: changed, payment });
     expect(res.status).toBe(409);
     expect(await res.json()).toEqual({ error: { code: "ORDER_ALREADY_EXISTS" } });
-    expect(await countRows("orders")).toBe(1);
+    const rows = await sql`select data_plan from public.orders`;
+    expect(rows).toEqual([{ data_plan: "30 Gb" }]);
   });
 
   it("creates exactly one order when the same request arrives twice at once", async () => {
     const connectionId = await connect("cloudid");
     const body = { connectionId, details: cloudidDetails, payment };
-    const statuses = (await Promise.all([call("POST", "/orders", body), call("POST", "/orders", body)])).map((r) => r.status);
-    expect(statuses.sort()).toEqual([201, 409]);
+    const responses = await Promise.all([call("POST", "/orders", body), call("POST", "/orders", body)]);
+    expect(responses.map((r) => r.status).sort()).toEqual([200, 201]);
+    const [a, b] = (await Promise.all(responses.map((r) => r.json()))) as { orderId: string }[];
+    expect(a!.orderId).toBe(b!.orderId);
     expect(await countRows("orders")).toBe(1);
     expect(loggedErrors).toEqual([]);
   });
@@ -363,6 +396,18 @@ describe("POST /feedback", () => {
     const res = await call("POST", "/feedback", { orderId: crypto.randomUUID(), message: "Hi" });
     expect(res.status).toBe(404);
     expect(await res.json()).toEqual({ error: { code: "ORDER_NOT_FOUND" } });
+  });
+});
+
+describe("Data API roles", () => {
+  it.each(["anon", "authenticated"])("%s cannot read or write any table", async (role) => {
+    for (const table of ["providers", "address_suggestions", "connections", "orders", "feedback"]) {
+      const attempt = sql.begin(async (tx) => {
+        await tx.unsafe(`set local role ${role}`);
+        await tx.unsafe(`select 1 from public.${table} limit 1`);
+      });
+      await expect(attempt, table).rejects.toMatchObject({ code: "42501" });
+    }
   });
 });
 

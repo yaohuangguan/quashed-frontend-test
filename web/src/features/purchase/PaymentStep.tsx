@@ -1,6 +1,7 @@
-// Step 2: "<Provider> Purchase" card form. Payment is simulated by the API.
+// Step 2: "<Provider> Purchase" card form. Payment is a demo: the card is
+// checked here and only its last four digits are sent to the API.
 import { useId, useState } from "react";
-import { paymentSchema, type PaymentDetails } from "@shared/purchase.ts";
+import { cardFormSchema, toPaymentDetails, type PaymentDetails } from "@shared/purchase.ts";
 import { Button } from "../../components/Button.tsx";
 import { ButtonsPane } from "../../components/ButtonsPane.tsx";
 import { describedBy, Field } from "../../components/Field.tsx";
@@ -34,7 +35,7 @@ export function PaymentStep({ providerName, submitting, error, onPay, onCancel, 
   const [cvv, setCvv] = useState("");
 
   const month = parseMaskedMonth(expiry);
-  const { data, errorFor, touch } = useValidation(paymentSchema(new Date()), {
+  const { data, errorFor, touch } = useValidation(cardFormSchema(new Date()), {
     cardNumber,
     expiryMonth: month?.month,
     expiryYear: month?.year,
@@ -43,7 +44,10 @@ export function PaymentStep({ providerName, submitting, error, onPay, onCancel, 
   });
 
   /** A field error from the server wins over the local one. */
-  const serverError = (field: string) => error?.fields.find((f) => f.path === `payment.${field}`)?.message;
+  const serverError = (field: string) => {
+    const path = field === "cardNumber" ? "payment.cardLast4" : `payment.${field}`;
+    return error?.fields.find((f) => f.path === path)?.message;
+  };
   const errorOf = (field: string) => serverError(field) ?? errorFor(field);
   const expiryError = errorOf("expiryMonth") ?? errorOf("expiryYear");
 
@@ -54,7 +58,7 @@ export function PaymentStep({ providerName, submitting, error, onPay, onCancel, 
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
-        if (data && !submitting) onPay(data);
+        if (data && !submitting) onPay(toPaymentDetails(data));
       }}
     >
       <FlyoutHeader titleId={titleId} title={t.paymentTitle(providerName)} onDisconnect={onDisconnect} />
@@ -115,6 +119,9 @@ export function PaymentStep({ providerName, submitting, error, onPay, onCancel, 
           </Field>
         </div>
         <p className="flyout__note">{t.privacy}</p>
+        <p className="flyout__demo" role="note">
+          {t.demoPayment}
+        </p>
         {error && (
           <p className="flyout__error" role="alert">
             {messages.errors[error.code]}

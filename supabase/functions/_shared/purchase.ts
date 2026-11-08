@@ -63,32 +63,63 @@ export type PurchaseDetails = {
 
 const VALID_MONTH = "Enter a valid month";
 
-/** Step 2 of the fly-out: card details. Payment is simulated. */
-export function paymentSchema(now: Date) {
+const expiryFields = {
+  expiryMonth: z.number({ error: VALID_MONTH }).int(VALID_MONTH).min(1, VALID_MONTH).max(12, VALID_MONTH),
+  expiryYear: z.number({ error: VALID_MONTH }).int(VALID_MONTH).min(2000, VALID_MONTH).max(2100, VALID_MONTH),
+  cardHolder: personName,
+};
+
+const EXPIRED = { path: ["expiryMonth"], message: "This card has expired" };
+
+function notExpired(now: Date) {
+  return (card: { expiryMonth: number; expiryYear: number }) => !isMonthInPast(card.expiryMonth, card.expiryYear, now);
+}
+
+/**
+ * Step 2 of the fly-out, as typed in the browser. Payment is a demo: the full
+ * card number and the CVV are checked here and never leave the browser.
+ */
+export function cardFormSchema(now: Date) {
   return z
     .strictObject({
       cardNumber: z
         .string({ error: REQUIRED })
         .transform((value) => value.replace(/\s/g, ""))
         .pipe(z.string().regex(/^\d{13,19}$/, "Enter a valid card number")),
-      expiryMonth: z.number({ error: VALID_MONTH }).int(VALID_MONTH).min(1, VALID_MONTH).max(12, VALID_MONTH),
-      expiryYear: z.number({ error: VALID_MONTH }).int(VALID_MONTH).min(2000, VALID_MONTH).max(2100, VALID_MONTH),
-      cardHolder: personName,
       cvv: z.string({ error: REQUIRED }).regex(/^\d{3,4}$/, "Enter 3 or 4 digits"),
+      ...expiryFields,
     })
-    .refine((card) => !isMonthInPast(card.expiryMonth, card.expiryYear, now), {
-      path: ["expiryMonth"],
-      message: "This card has expired",
-    });
+    .refine(notExpired(now), EXPIRED);
+}
+
+export type CardForm = z.infer<ReturnType<typeof cardFormSchema>>;
+
+/** What the API receives about the card: no full number, no CVV. */
+export function paymentSchema(now: Date) {
+  return z
+    .strictObject({
+      cardLast4: z.string({ error: REQUIRED }).regex(/^\d{4}$/, "Enter the last 4 digits"),
+      ...expiryFields,
+    })
+    .refine(notExpired(now), EXPIRED);
 }
 
 export type PaymentDetails = {
-  cardNumber: string;
+  cardLast4: string;
   expiryMonth: number;
   expiryYear: number;
   cardHolder: string;
-  cvv: string;
 };
+
+/** Drops everything the API must not receive. */
+export function toPaymentDetails(card: CardForm): PaymentDetails {
+  return {
+    cardLast4: card.cardNumber.slice(-4),
+    expiryMonth: card.expiryMonth,
+    expiryYear: card.expiryYear,
+    cardHolder: card.cardHolder,
+  };
+}
 
 export const createConnectionSchema = z.strictObject({
   providerId: z.string().regex(/^[a-z0-9-]{1,40}$/),

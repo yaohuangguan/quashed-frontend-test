@@ -65,14 +65,13 @@ export const messages = {
     cvvPlaceholder: "XXX",
     privacy:
       "Your personal data will be used to process your order, support your experience throughout this website, and for other purposes described in our privacy policy.",
+    demoPayment: "Demo payment: no real charges. Your card number and CVV stay in this browser.",
     confirmAndPay: "Confirm & Pay",
     paying: "Processing…",
     contractStarts: (date: string) => `Your contract starts from ${date}`,
     specialistsWillContact: (name: string) => `${name} specialists will contact you with further steps.`,
     backToDashboard: "Back to Dashboard",
     retry: "Try again",
-    invalidDate: "Enter a valid date",
-    invalidMonth: "Enter a valid month",
   },
   feedback: {
     title: "How did it go?",

@@ -18,6 +18,14 @@ export type NewOrder = {
   cardHolder: string;
   cardExpiryMonth: number;
   cardExpiryYear: number;
+  /** SHA-256 of the validated request, to recognise a retry. */
+  requestHash: string;
+};
+
+export type ExistingOrder = {
+  id: string;
+  requestHash: string | null;
+  contractStartDate: string;
 };
 
 export function createPurchaseStore(sql: Sql) {
@@ -46,6 +54,13 @@ export function createPurchaseStore(sql: Sql) {
     return rows.length === 1;
   }
 
+  async function findOrderByConnection(connectionId: string): Promise<ExistingOrder | null> {
+    const [row] = await sql<ExistingOrder[]>`
+      select id, request_hash as "requestHash", contract_start_date::text as "contractStartDate"
+      from public.orders where connection_id = ${connectionId}`;
+    return row ?? null;
+  }
+
   /** Returns the new order id, or null when the connection already has an order. */
   async function createOrder(order: NewOrder): Promise<string | null> {
     const d = order.details;
@@ -54,13 +69,14 @@ export function createPurchaseStore(sql: Sql) {
         insert into public.orders (
           connection_id, provider_id, first_name, surname, address, data_plan,
           contract_start_date, additional_services, needs_router, current_provider,
-          card_last4, card_holder, card_expiry_month, card_expiry_year
+          card_last4, card_holder, card_expiry_month, card_expiry_year, request_hash
         ) values (
           ${order.connectionId}, ${order.providerId}, ${d.firstName}, ${d.surname},
           ${d.address}, ${d.dataPlan}, ${d.contractStartDate},
           array(select jsonb_array_elements_text(${sql.json(d.additionalServices ?? [])})),
           ${d.needsRouter ?? null}, ${d.currentProvider ?? null},
-          ${order.cardLast4}, ${order.cardHolder}, ${order.cardExpiryMonth}, ${order.cardExpiryYear}
+          ${order.cardLast4}, ${order.cardHolder}, ${order.cardExpiryMonth}, ${order.cardExpiryYear},
+          ${order.requestHash}
         )
         returning id`;
       return row!.id;
@@ -86,7 +102,15 @@ export function createPurchaseStore(sql: Sql) {
     }
   }
 
-  return { createConnection, findConnection, disconnect, createOrder, orderExists, addFeedback };
+  return {
+    createConnection,
+    findConnection,
+    disconnect,
+    findOrderByConnection,
+    createOrder,
+    orderExists,
+    addFeedback,
+  };
 }
 
 export type PurchaseStore = ReturnType<typeof createPurchaseStore>;

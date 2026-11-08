@@ -51,10 +51,26 @@ export async function startCluster(): Promise<LocalCluster> {
   };
 }
 
-/** Drops the public schema and applies every migration in order. */
+/** Roles that exist on every Supabase project; the migrations refer to them. */
+const SUPABASE_ROLES = `
+  do $$ begin
+    if not exists (select from pg_roles where rolname = 'anon') then create role anon nologin; end if;
+    if not exists (select from pg_roles where rolname = 'authenticated') then create role authenticated nologin; end if;
+  end $$;`;
+
+/**
+ * Drops the public schema and applies every migration in order. Like
+ * Supabase, anon and authenticated start with full grants on public, so the
+ * migrations have to take them away.
+ */
 export async function migrate(url: string) {
   const sql = postgres(url, { max: 1, onnotice: () => {} });
-  await sql.unsafe("drop schema if exists public cascade; create schema public;");
+  await sql.unsafe(SUPABASE_ROLES);
+  await sql.unsafe(`
+    drop schema if exists public cascade; create schema public;
+    grant usage on schema public to anon, authenticated;
+    alter default privileges in schema public grant all on tables to anon, authenticated;
+    alter default privileges in schema public grant all on sequences to anon, authenticated;`);
   for (const file of readdirSync(MIGRATIONS).filter((f) => f.endsWith(".sql")).sort()) {
     await sql.unsafe(readFileSync(join(MIGRATIONS, file), "utf8"));
   }

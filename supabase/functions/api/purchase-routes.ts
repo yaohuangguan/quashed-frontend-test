@@ -30,11 +30,21 @@ export async function disconnect(purchases: PurchaseStore, connectionId: string)
   return noContent();
 }
 
+/** Hex SHA-256 of a value's JSON, used to recognise a repeated order request. */
+async function hashOf(value: unknown): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify(value)));
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/**
+ * Places the order for a connection. Repeating the same request (for example
+ * after a lost response) returns the existing order with 200; a different
+ * request on a connection that already has an order is refused with 409.
+ */
 export async function createOrder(req: Request, catalog: CatalogStore, purchases: PurchaseStore, now: Date) {
   const request = parseOrThrow(createOrderSchema, await readJson(req));
   const connection = await purchases.findConnection(request.connectionId);
   if (!connection) throw new AppError("CONNECTION_NOT_FOUND");
-  if (connection.disconnectedAt) throw new AppError("CONNECTION_CLOSED");
   const provider = await catalog.findProvider(connection.providerId);
   if (!provider) throw new AppError("PROVIDER_NOT_FOUND");
 
@@ -44,18 +54,35 @@ export async function createOrder(req: Request, catalog: CatalogStore, purchases
     "details",
   );
   const card = parseOrThrow(paymentSchema(now), request.payment, "payment");
+  const requestHash = await hashOf({ details, card });
+
+  const replay = async () => {
+    const existing = await purchases.findOrderByConnection(connection.id);
+    if (!existing || existing.requestHash !== requestHash) throw new AppError("ORDER_ALREADY_EXISTS");
+    const body: CreateOrderResponse = {
+      orderId: existing.id,
+      providerName: provider.name,
+      contractStartDate: existing.contractStartDate,
+    };
+    return json(body, 200);
+  };
+
+  // A retry may arrive after the user disconnected, so check for it first.
+  if (await purchases.findOrderByConnection(connection.id)) return replay();
+  if (connection.disconnectedAt) throw new AppError("CONNECTION_CLOSED");
 
   const orderId = await purchases.createOrder({
     connectionId: connection.id,
     providerId: provider.id,
     details,
-    // Only the last four digits are stored; the CVV is checked and dropped.
-    cardLast4: card.cardNumber.slice(-4),
+    cardLast4: card.cardLast4,
     cardHolder: card.cardHolder,
     cardExpiryMonth: card.expiryMonth,
     cardExpiryYear: card.expiryYear,
+    requestHash,
   });
-  if (!orderId) throw new AppError("ORDER_ALREADY_EXISTS");
+  // Lost a race with an identical request: answer like a retry.
+  if (!orderId) return replay();
 
   const body: CreateOrderResponse = {
     orderId,
