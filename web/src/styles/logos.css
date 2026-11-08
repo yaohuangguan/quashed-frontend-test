@@ -1,0 +1,51 @@
+/* Logos are slices of one image each, positioned exactly as in Figma
+   (layer insets and image offsets in percent of a 160 x 48 box). */
+.logo {
+  position: relative;
+  display: block;
+  width: 160px;
+  height: 48px;
+  overflow: hidden;
+}
+.logo--text {
+  display: flex;
+  align-items: center;
+  font-size: var(--text-h4);
+  font-weight: 700;
+}
+.logo__layer {
+  position: absolute;
+  overflow: hidden;
+}
+.logo__image {
+  position: absolute;
+  max-width: none;
+  user-select: none;
+}
+
+/* Cloudid */
+.logo--cloudid .logo__layer--1 { inset: 14.58% 17.53% 18.75% 30.63%; }
+.logo--cloudid .logo__layer--1 .logo__image { top: -30%; left: -80.52%; width: 198.71%; height: 172%; }
+.logo--cloudid .logo__layer--2 { inset: 20.83% 71.02% 20.83% 0; }
+.logo--cloudid .logo__layer--2 .logo__image { top: -30%; left: -24.15%; width: 311.03%; height: 172%; }
+.logo--cloudid .logo__layer--3 { inset: 14.58% 6.88% 18.75% 81.88%; }
+.logo--cloudid .logo__layer--3 .logo__image { top: -30%; left: -693.33%; width: 915.82%; height: 172%; }
+
+/* Pronete */
+.logo--pronete .logo__layer--1 { inset: 25% 12.5% 22.92% 25.62%; }
+.logo--pronete .logo__layer--1 .logo__image { top: -51.85%; left: -50.6%; width: 154.46%; height: 203.71%; }
+.logo--pronete .logo__layer--2 { inset: 25% 3.75% 16.67% 86.88%; }
+.logo--pronete .logo__layer--2 .logo__image { top: -46.3%; left: -787.32%; width: 1019.47%; height: 181.88%; }
+.logo--pronete .logo__layer--3 { inset: 12.5% 76.25% 10.42% 1.25%; }
+.logo--pronete .logo__layer--3 .logo__image { top: -9.22%; left: -12.05%; width: 361.51%; height: 118.43%; }
+
+/* Tebiobio */
+.logo--tebiobio .logo__layer--1 { inset: 12.5% 28.73% 14.58% 0; }
+.logo--tebiobio .logo__layer--1 .logo__image { top: -17.55%; left: -4.95%; width: 110.89%; height: 138.32%; }
+.logo--tebiobio .logo__layer--2 { inset: 12.5% 0.24% 14.58% 69.38%; }
+.logo--tebiobio .logo__layer--2 .logo__image { top: -17.55%; left: -148.23%; width: 260.13%; height: 138.32%; }
+
+/* digitallly (header) */
+.logo--digitallly .logo__layer--1 { inset: 20.83% 0.06% 8.33% 81.88%; }
+.logo--digitallly .logo__layer--2 { inset: 12.5% 18.33% 8.33% 0; }
+.logo--digitallly .logo__image { inset: 0; width: 100%; height: 100%; }

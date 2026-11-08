@@ -1,0 +1,33 @@
+/* "How did it go?" popup. */
+.feedback__title {
+  margin: 0;
+  padding-bottom: var(--space-l);
+  font-size: var(--text-h4);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+}
+.feedback__intro {
+  margin: 0 0 var(--space-xl);
+}
+.feedback__message {
+  display: block;
+  width: 100%;
+  min-height: 120px;
+  padding: var(--space-s) var(--space-s) var(--space-s) var(--space-ms);
+  border: 1px solid var(--neutral-t80);
+  background: var(--surface-3);
+  font-size: var(--text-m);
+  resize: vertical;
+}
+.feedback__message::placeholder {
+  color: var(--neutral-t80);
+}
+.feedback__message:focus {
+  border-color: var(--blue-0);
+  outline: none;
+  box-shadow: 0 0 0 1px var(--blue-0);
+}
+.feedback__error {
+  margin: var(--space-s) 0 0;
+  color: var(--red-0);
+}

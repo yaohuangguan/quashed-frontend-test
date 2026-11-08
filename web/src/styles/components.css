@@ -1,0 +1,346 @@
+/* Shared components: header, buttons, chips, fields, menus, dialogs. */
+
+/* Header */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--header-height);
+  padding: var(--space-s) var(--space-m);
+  background: var(--blue-0);
+}
+.header__start {
+  display: flex;
+  align-items: center;
+  gap: var(--space-ms);
+}
+.header__home {
+  display: block;
+  border-radius: 4px;
+}
+.header__account {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 26px;
+  background: var(--surface-3);
+}
+.header :focus-visible {
+  outline-color: var(--surface-1);
+}
+
+.icon-button {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+/* Buttons */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 0 var(--space-ls);
+  border: 0;
+  font-size: var(--text-button);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-button);
+  white-space: nowrap;
+}
+.button__label {
+  padding: 0 var(--space-xs);
+}
+.button--medium {
+  height: 40px;
+}
+.button--large {
+  height: 48px;
+  padding: 0 var(--space-l);
+}
+.button--large .button__label {
+  padding: 0 var(--space-s);
+}
+.button__arrow--medium {
+  width: 16px;
+  height: 16px;
+}
+.button__arrow--large {
+  width: 20px;
+  height: 20px;
+}
+.button--primary {
+  background: var(--blue-0);
+  color: var(--surface-1);
+}
+.button--primary:not(:disabled):hover {
+  background: #0559c0;
+}
+.button--primary:disabled {
+  background: var(--surface-2);
+  color: var(--neutral-t80);
+}
+.button--text {
+  background: none;
+  color: var(--neutral-0);
+}
+.button--text:hover {
+  color: var(--mono-primary);
+}
+.buttons-pane {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-m);
+  padding-top: var(--space-xl);
+}
+
+/* Chips */
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-s);
+  min-height: 40px;
+}
+.chip {
+  height: 28px;
+  padding: 0 var(--space-s);
+  border: 1px solid var(--neutral-t80);
+  border-radius: 16px;
+  background: var(--mono-secondary);
+  color: var(--mono-primary);
+  font-size: var(--text-m);
+  line-height: var(--leading-body);
+}
+.chip:hover {
+  border-color: var(--blue-0);
+}
+.chip--selected {
+  border-color: var(--blue-0);
+  background: var(--blue-0);
+  color: var(--surface-1);
+}
+.chip--wide {
+  min-width: 80px;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 var(--space-s);
+  border: 1.5px solid var(--blue-0);
+  border-radius: 16px;
+  background: var(--mono-secondary);
+  color: var(--blue-0);
+  font-size: var(--text-s);
+}
+
+/* Fields */
+.field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.field__label {
+  min-height: 28px;
+  padding-bottom: var(--space-xs);
+  overflow: hidden;
+  color: var(--neutral-0);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.field__control {
+  position: relative;
+}
+.field__error {
+  margin: var(--space-xs) 0 0;
+  color: var(--red-0);
+  font-size: var(--text-s);
+}
+.text-input,
+.select__button {
+  width: 100%;
+  height: 40px;
+  padding: var(--space-s) var(--space-ms);
+  border: 1px solid var(--neutral-t80);
+  border-radius: 0;
+  background: var(--surface-1);
+  font-size: var(--text-m);
+}
+.text-input::placeholder {
+  color: var(--neutral-t80);
+}
+.text-input:focus,
+.select__button:focus-visible {
+  border-color: var(--blue-0);
+  outline: none;
+  box-shadow: 0 0 0 1px var(--blue-0);
+}
+.text-input[aria-invalid="true"],
+.select__button[aria-invalid="true"] {
+  border-color: var(--red-0);
+}
+
+/* Masked input with a picker button */
+.picker-input .text-input {
+  padding-right: 40px;
+}
+.picker-input__button {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  display: grid;
+  place-items: center;
+  padding: 2px;
+  border: 0;
+  background: none;
+  transform: translateY(-50%);
+}
+.picker-input__native {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Select */
+.select {
+  position: relative;
+}
+.select__button {
+  display: flex;
+  align-items: center;
+  padding-right: 40px;
+  text-align: left;
+}
+.select__button--placeholder {
+  color: var(--neutral-t80);
+}
+.select__caret {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+}
+
+/* Dropdown menu (select and address suggestions) */
+.combobox {
+  position: relative;
+}
+.menu {
+  position: absolute;
+  z-index: 5;
+  top: 100%;
+  right: 0;
+  left: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--surface-1);
+  box-shadow: var(--shadow-menu);
+}
+.menu:focus {
+  outline: none;
+}
+.menu[hidden] {
+  display: none;
+}
+.menu__item {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: var(--space-s) var(--space-ms);
+  cursor: pointer;
+  font-size: var(--text-s);
+}
+.menu__item--active {
+  background: var(--blue-tint);
+}
+
+/* Overlays */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: fade-in 150ms ease-out;
+}
+.flyout-layer,
+.popup-layer {
+  position: fixed;
+  z-index: 10;
+  inset: 0;
+}
+
+/* Fly-out panel */
+.flyout {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  width: min(var(--flyout-width), 100%);
+  overflow-y: auto;
+  background: var(--surface-3);
+  animation: slide-in 200ms ease-out;
+}
+.flyout:focus {
+  outline: none;
+}
+
+/* Popup */
+.popup {
+  position: relative;
+  width: min(640px, calc(100% - 2 * var(--space-m)));
+  margin: 160px auto 0;
+  padding: var(--space-xl);
+  border: 1px solid var(--neutral-t80);
+  background: var(--surface-3);
+  box-shadow: var(--shadow-popup);
+  animation: fade-in 150ms ease-out;
+}
+.popup:focus {
+  outline: none;
+}
+.popup__close {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes slide-in {
+  from {
+    transform: translateX(40px);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .overlay,
+  .flyout,
+  .popup {
+    animation: none;
+  }
+}
+@media (max-width: 640px) {
+  .popup {
+    margin-top: 80px;
+    padding: var(--space-l);
+  }
+}

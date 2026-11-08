@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "types": ["node"]
+  },
+  "include": ["supabase/functions/**/*.ts", "scripts/**/*.ts", "vitest.config.ts", "playwright.config.ts", "e2e/**/*.ts"],
+  // index.ts uses Deno globals and is checked by Deno when deployed.
+  "exclude": ["supabase/functions/api/index.ts"]
+}

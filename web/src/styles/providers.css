@@ -1,0 +1,171 @@
+/* Provider comparison page. */
+.page {
+  padding: var(--space-l) var(--space-l) var(--space-2xl);
+}
+.page__status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-m);
+  padding: var(--space-l);
+  background: var(--surface-3);
+}
+.page__status p {
+  margin: 0;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--neutral-t80);
+}
+.table-scroll:focus-visible {
+  outline-offset: 0;
+}
+
+.providers-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 100%;
+}
+.providers-table th,
+.providers-table td {
+  padding: var(--space-l);
+  border-right: 1px solid var(--neutral-t80);
+  border-bottom: 1px solid var(--neutral-t80);
+  font-weight: 400;
+  text-align: left;
+  vertical-align: bottom;
+}
+.providers-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+.providers-table tr > :last-child {
+  border-right: 0;
+}
+.providers-table thead th {
+  height: 72px;
+  padding-top: var(--space-m);
+  padding-bottom: var(--space-m);
+  background: var(--mono-secondary);
+  vertical-align: middle;
+}
+.providers-table td,
+.providers-table thead th:not(:first-child) {
+  min-width: 200px;
+  width: 200px;
+}
+.providers-table tbody td {
+  height: 194px;
+  white-space: nowrap;
+}
+/* Feature columns alternate between the two greys of the design. */
+.providers-table tbody td:nth-child(even) {
+  background: var(--mono-secondary);
+}
+.providers-table tbody td:nth-child(odd) {
+  background: var(--surface-3);
+}
+/* The provider column stays in place while the others scroll. */
+.providers-table__provider-head,
+.providers-table__provider {
+  position: sticky;
+  z-index: 1;
+  left: 0;
+  width: 400px;
+  min-width: 400px;
+}
+.providers-table__provider {
+  background: var(--surface-3);
+  vertical-align: middle;
+}
+
+.provider-card {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-xl);
+}
+.provider-card__info {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 160px;
+}
+.provider-card__badges {
+  height: 20px;
+  margin-bottom: var(--space-s);
+}
+.provider-card__name {
+  margin: 0 0 var(--space-l);
+  font-size: inherit;
+}
+.provider-card__retrieved {
+  margin: 0;
+  color: var(--neutral-0);
+  font-size: var(--text-s);
+}
+.provider-card__action {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-m);
+}
+.provider-card__tagline {
+  margin: 0;
+  color: var(--neutral-0);
+}
+.provider-card__action .button {
+  width: 100%;
+  /* The design's 160px slot is narrower than the button's usual padding. */
+  padding: 0 var(--space-ms);
+}
+.provider-card__action .button__label {
+  padding: 0 var(--space-xs);
+}
+
+.price {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin: 0;
+  white-space: nowrap;
+}
+.price__amount {
+  color: var(--blue-0);
+  font-size: var(--text-price-s);
+  font-weight: 700;
+  line-height: var(--leading-tight);
+}
+.price__amount--large {
+  font-size: var(--text-h4);
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: var(--space-m);
+  }
+  .providers-table__provider-head,
+  .providers-table__provider {
+    width: 220px;
+    min-width: 220px;
+  }
+  .providers-table th,
+  .providers-table td {
+    padding: var(--space-m);
+  }
+  .provider-card {
+    flex-direction: column;
+    gap: var(--space-m);
+  }
+  .provider-card__info {
+    flex-basis: auto;
+  }
+  .providers-table td,
+  .providers-table thead th:not(:first-child) {
+    min-width: 150px;
+    width: 150px;
+  }
+  .providers-table tbody td {
+    height: auto;
+  }
+}

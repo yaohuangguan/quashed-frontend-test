@@ -1,0 +1,8 @@
+# Supabase CLI config. Only the parts this project uses are listed.
+project_id = "oljzvclugjgddwlwmaun"
+
+[functions.api]
+# The web app sends the publishable key (sb_publishable_...) in the `apikey`
+# header. The platform's JWT check only understands legacy JWT keys, so the
+# function checks the key itself (see functions/api/auth.ts).
+verify_jwt = false
