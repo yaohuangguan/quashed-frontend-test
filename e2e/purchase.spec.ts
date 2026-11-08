@@ -70,6 +70,25 @@ test("buys Cloudid end to end and sends feedback", async ({ page }) => {
   await expect(pay).toBeDisabled();
   await fillCard(page);
 
+  // Back to the form: every answer is still there, and so is the card after Continue.
+  await flyout.getByRole("button", { name: "Back" }).click();
+  await expect(flyout.getByRole("heading", { name: "Cloudid Purchase Form" })).toBeVisible();
+  await expect(flyout.getByLabel("First name")).toHaveValue("Steven");
+  await expect(flyout.getByLabel("Surname")).toHaveValue("Baker");
+  await expect(flyout.getByLabel("Address")).toHaveValue("100 Queen Street #B");
+  await expect(flyout.getByLabel("Contract start date")).toHaveValue(
+    `${date.typed.slice(0, 2)} / ${date.typed.slice(2, 4)} / ${date.typed.slice(4)}`,
+  );
+  await expect(flyout.getByRole("radio", { name: "30 Gb" })).toHaveAttribute("aria-checked", "true");
+  await expect(flyout.getByRole("button", { name: "Dedicated IP" })).toHaveAttribute("aria-pressed", "true");
+  await expect(flyout.getByRole("button", { name: /current Internet provider/ })).toContainText("Spark");
+  await flyout.getByLabel("First name").fill("Stephen");
+  await flyout.getByRole("button", { name: "Continue" }).click();
+  await expect(page.getByLabel("Card number")).toHaveValue("1234 5678 9101 1121");
+  await expect(page.getByLabel("Expiration date")).toHaveValue(`12 / ${nextYear}`);
+  await expect(page.getByLabel("Name on card")).toHaveValue("Steven Baker");
+  await expect(page.getByLabel("CVV")).toHaveValue("334");
+
   await expect(flyout.getByRole("note")).toContainText("Demo payment");
 
   const orderResponse = page.waitForResponse((r) => r.url().endsWith("/api/orders"));
@@ -77,7 +96,9 @@ test("buys Cloudid end to end and sends feedback", async ({ page }) => {
   const response = await orderResponse;
   expect(response.status()).toBe(201);
   // Only the last four digits leave the browser; never the full number or CVV.
-  const sent = response.request().postDataJSON() as { payment: Record<string, unknown> };
+  const sent = response.request().postDataJSON() as { details: Record<string, unknown>; payment: Record<string, unknown> };
+  // The answer changed after going back is the one that is ordered.
+  expect(sent.details.firstName).toBe("Stephen");
   expect(sent.payment).toEqual({ cardLast4: "1121", expiryMonth: 12, expiryYear: Number(nextYear), cardHolder: "Steven Baker" });
   expect(response.request().postData()).not.toContain("12345678");
   expect(response.request().postData()).not.toContain("334");

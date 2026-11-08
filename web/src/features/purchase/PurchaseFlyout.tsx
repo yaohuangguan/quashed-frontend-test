@@ -29,7 +29,7 @@ export function PurchaseFlyout({ provider, onClose }: PurchaseFlyoutProps) {
   };
 
   return (
-    <FlyOut onClose={close} label={provider.name}>
+    <FlyOut onClose={close} label={provider.name} stepKey={state.step}>
       {state.step === "connecting" && (
         <LoadingStep providerId={provider.id} providerName={provider.name} status={{ text: messages.purchase.connecting }} onClose={close} />
       )}
@@ -45,14 +45,22 @@ export function PurchaseFlyout({ provider, onClose }: PurchaseFlyoutProps) {
         />
       )}
       {state.step === "details" && (
-        <DetailsStep options={state.options} onContinue={flow.continueToPayment} onCancel={close} onDisconnect={disconnect} />
+        <DetailsStep
+          options={state.options}
+          previous={state.previous}
+          onContinue={flow.continueToPayment}
+          onCancel={close}
+          onDisconnect={disconnect}
+        />
       )}
       {state.step === "payment" && (
         <PaymentStep
           providerName={state.options.providerName}
+          initial={state.card}
           submitting={flow.submitting}
           error={flow.paymentError}
           onPay={flow.pay}
+          onBack={flow.backToDetails}
           onCancel={close}
           onDisconnect={disconnect}
         />

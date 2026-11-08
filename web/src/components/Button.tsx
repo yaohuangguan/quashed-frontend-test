@@ -6,12 +6,15 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   /** "large" is the 48px "Get Started" button; "medium" is 40px. */
   size?: "medium" | "large";
   withArrow?: boolean;
+  /** A left-pointing arrow before the label, for "Back". */
+  backArrow?: boolean;
 };
 
 export function Button({
   variant = "primary",
   size = "medium",
   withArrow = false,
+  backArrow = false,
   className = "",
   type = "button",
   children,
@@ -20,6 +23,7 @@ export function Button({
   const arrow = rest.disabled ? arrowRightMuted : arrowRightLight;
   return (
     <button type={type} className={`button button--${variant} button--${size} ${className}`} {...rest}>
+      {backArrow && <img className="button__arrow button__arrow--back" src={arrowRightMuted} alt="" aria-hidden="true" />}
       <span className="button__label">{children}</span>
       {withArrow && <img className={`button__arrow button__arrow--${size}`} src={arrow} alt="" aria-hidden="true" />}
     </button>

@@ -20,25 +20,27 @@ const t = messages.purchase;
 
 type DetailsStepProps = {
   options: PurchaseOptions;
+  /** Answers to show again after going back from payment. */
+  previous?: PurchaseDetails;
   onContinue: (details: PurchaseDetails) => void;
   onCancel: () => void;
   onDisconnect: () => void;
 };
 
-export function DetailsStep({ options, onContinue, onCancel, onDisconnect }: DetailsStepProps) {
+export function DetailsStep({ options, previous, onContinue, onCancel, onDisconnect }: DetailsStepProps) {
   const id = useId();
   const titleId = `${id}-title`;
   const { form } = options;
   const asks = (field: PurchaseField) => form.fields.includes(field);
 
-  const [firstName, setFirstName] = useState("");
-  const [surname, setSurname] = useState("");
-  const [address, setAddress] = useState("");
-  const [dataPlan, setDataPlan] = useState<string>();
-  const [startDate, setStartDate] = useState("");
-  const [services, setServices] = useState<string[]>([]);
-  const [needsRouter, setNeedsRouter] = useState<boolean>();
-  const [currentProvider, setCurrentProvider] = useState<string>();
+  const [firstName, setFirstName] = useState(previous?.firstName ?? "");
+  const [surname, setSurname] = useState(previous?.surname ?? "");
+  const [address, setAddress] = useState(previous?.address ?? "");
+  const [dataPlan, setDataPlan] = useState(previous?.dataPlan);
+  const [startDate, setStartDate] = useState(previous ? isoToMaskedDate(previous.contractStartDate) : "");
+  const [services, setServices] = useState<string[]>(previous?.additionalServices ?? []);
+  const [needsRouter, setNeedsRouter] = useState(previous?.needsRouter);
+  const [currentProvider, setCurrentProvider] = useState(previous?.currentProvider);
 
   const candidate = {
     firstName,

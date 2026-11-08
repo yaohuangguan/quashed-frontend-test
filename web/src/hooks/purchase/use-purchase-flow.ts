@@ -1,5 +1,6 @@
 // State of the purchase fly-out, step by step:
-//   connecting -> retrieving -> details -> payment -> confirmed
+//   connecting -> retrieving -> details <-> payment -> confirmed
+// Going back from payment keeps everything typed so far, in memory only.
 // "Connecting..." and "Retrieving data..." each stay on screen for at least
 // config.stepDelayMs, as the design asks, while the real requests run.
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -8,11 +9,21 @@ import type { CreateOrderResponse, PaymentDetails, PurchaseDetails } from "@shar
 import { config } from "../../config.ts";
 import { api, ApiError, errorCodeOf, type ApiErrorCode } from "../../lib/api-client.ts";
 
+/** The card fields as typed, kept while the user goes back and forth. */
+export type CardDraft = { cardNumber: string; expiry: string; cardHolder: string; cvv: string };
+
 export type FlowStep =
   | { step: "connecting" }
   | { step: "retrieving"; connectionId: string }
-  | { step: "details"; connectionId: string; options: PurchaseOptions }
-  | { step: "payment"; connectionId: string; options: PurchaseOptions; details: PurchaseDetails }
+  | {
+      step: "details";
+      connectionId: string;
+      options: PurchaseOptions;
+      /** Answers given before going back from payment. */
+      previous?: PurchaseDetails;
+      card?: CardDraft;
+    }
+  | { step: "payment"; connectionId: string; options: PurchaseOptions; details: PurchaseDetails; card?: CardDraft }
   | { step: "confirmed"; options: PurchaseOptions; order: CreateOrderResponse }
   | { step: "failed"; code: ApiErrorCode };
 
@@ -53,8 +64,31 @@ export function usePurchaseFlow(providerId: string) {
   const retry = useCallback(() => setAttempt((n) => n + 1), []);
 
   const continueToPayment = useCallback((details: PurchaseDetails) => {
-    setState((current) => (current.step === "details" ? { ...current, step: "payment", details } : current));
+    setState((current) =>
+      current.step === "details"
+        ? { step: "payment", connectionId: current.connectionId, options: current.options, details, card: current.card }
+        : current,
+    );
   }, []);
+
+  const backToDetails = useCallback(
+    (card: CardDraft) => {
+      if (submitting) return;
+      setPaymentError(null);
+      setState((current) =>
+        current.step === "payment"
+          ? {
+              step: "details",
+              connectionId: current.connectionId,
+              options: current.options,
+              previous: current.details,
+              card,
+            }
+          : current,
+      );
+    },
+    [submitting],
+  );
 
   const pay = useCallback(
     async (payment: PaymentDetails) => {
@@ -80,5 +114,5 @@ export function usePurchaseFlow(providerId: string) {
     if (connectionId) void api.disconnect(connectionId).catch(() => {});
   }, []);
 
-  return { state, retry, continueToPayment, pay, submitting, paymentError, disconnect };
+  return { state, retry, continueToPayment, backToDetails, pay, submitting, paymentError, disconnect };
 }

@@ -53,6 +53,7 @@ export const messages = {
     yes: "Yes",
     no: "No",
     cancel: "Cancel",
+    back: "Back",
     continue: "Continue",
     cardNumber: "Card number",
     cardNumberPlaceholder: "1234 5678 9101 1121",

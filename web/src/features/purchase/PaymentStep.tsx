@@ -8,6 +8,7 @@ import { describedBy, Field } from "../../components/Field.tsx";
 import { PickerInput } from "../../components/PickerInput.tsx";
 import { TextInput } from "../../components/TextInput.tsx";
 import { useValidation } from "../../hooks/purchase/use-validation.ts";
+import type { CardDraft } from "../../hooks/purchase/use-purchase-flow.ts";
 import type { ApiError } from "../../lib/api-client.ts";
 import { isoMonthToMasked, maskCardNumber, maskCvv, maskMonth, parseMaskedMonth } from "../../lib/masks.ts";
 import { messages } from "../../locales/en.ts";
@@ -17,22 +18,26 @@ const t = messages.purchase;
 
 type PaymentStepProps = {
   providerName: string;
+  /** Card fields typed before going back to the form. */
+  initial?: CardDraft;
   submitting: boolean;
   error: ApiError | null;
   onPay: (payment: PaymentDetails) => void;
+  onBack: (draft: CardDraft) => void;
   onCancel: () => void;
   onDisconnect: () => void;
 };
 
-export function PaymentStep({ providerName, submitting, error, onPay, onCancel, onDisconnect }: PaymentStepProps) {
+export function PaymentStep(props: PaymentStepProps) {
+  const { providerName, initial, submitting, error, onPay, onBack, onCancel, onDisconnect } = props;
   const id = useId();
   const titleId = `${id}-title`;
   const fieldId = (name: string) => `${id}-${name}`;
 
-  const [cardNumber, setCardNumber] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cardHolder, setCardHolder] = useState("");
-  const [cvv, setCvv] = useState("");
+  const [cardNumber, setCardNumber] = useState(initial?.cardNumber ?? "");
+  const [expiry, setExpiry] = useState(initial?.expiry ?? "");
+  const [cardHolder, setCardHolder] = useState(initial?.cardHolder ?? "");
+  const [cvv, setCvv] = useState(initial?.cvv ?? "");
 
   const month = parseMaskedMonth(expiry);
   const { data, errorFor, touch } = useValidation(cardFormSchema(new Date()), {
@@ -128,7 +133,18 @@ export function PaymentStep({ providerName, submitting, error, onPay, onCancel, 
           </p>
         )}
       </div>
-      <ButtonsPane>
+      <ButtonsPane
+        start={
+          <Button
+            variant="text"
+            backArrow
+            disabled={submitting}
+            onClick={() => onBack({ cardNumber, expiry, cardHolder, cvv })}
+          >
+            {t.back}
+          </Button>
+        }
+      >
         <Button variant="text" onClick={onCancel}>
           {t.cancel}
         </Button>

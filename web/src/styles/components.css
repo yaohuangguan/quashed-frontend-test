@@ -75,6 +75,12 @@
   width: 20px;
   height: 20px;
 }
+/* The design's arrow icon, pointing left. */
+.button__arrow--back {
+  width: 16px;
+  height: 16px;
+  transform: scaleX(-1);
+}
 .button--primary {
   background: var(--blue-0);
   color: var(--surface-1);
@@ -90,8 +96,11 @@
   background: none;
   color: var(--neutral-0);
 }
-.button--text:hover {
+.button--text:hover:not(:disabled) {
   color: var(--mono-primary);
+}
+.button--text:disabled {
+  color: var(--neutral-t80);
 }
 .buttons-pane {
   display: flex;
@@ -99,6 +108,9 @@
   align-items: center;
   gap: var(--space-m);
   padding-top: var(--space-xl);
+}
+.buttons-pane__start {
+  margin-right: auto;
 }
 
 /* Chips */
