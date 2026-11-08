@@ -1,5 +1,7 @@
 # digitallly – internet provider comparison
 
+**Live:** https://digitallly-avd.pages.dev
+
 A full-stack build of the **Front-End Developer Test Assignment** Figma design:
 compare three internet providers, buy a plan through the fly-out
 (connecting → purchase form → payment → confirmation) and leave feedback.
